@@ -1,7 +1,9 @@
 Settings:
       # Scheduler Interval in minutes
       Interval: 5
+      # true: random | false: consecutive
       Random: false
+      # true: permissions security | false: only OP's
       Permission: true
 Announcer:
       # Strings to announce
