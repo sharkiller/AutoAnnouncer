@@ -1,0 +1,10 @@
+Settings:
+      # Scheduler Interval in minutes
+      Interval: 5
+      Random: false
+      Permission: true
+Announcer:
+      # Strings to announce
+      Strings:
+            - '&RED;Running CraftBukkit server with &GOLD;AutoAnnouncer.'
+            - '&GREEN;Development by Sharkiller!'
