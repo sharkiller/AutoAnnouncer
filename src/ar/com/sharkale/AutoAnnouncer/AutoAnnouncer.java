@@ -130,7 +130,6 @@ public class AutoAnnouncer extends JavaPlugin
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
     {
     	String commandName = cmd.getName();
-    	System.out.println(commandName);
     	if(sender instanceof Player)
     	{
     		Player player = (Player)sender;
