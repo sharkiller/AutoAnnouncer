@@ -43,12 +43,11 @@ public class AutoAnnouncer extends JavaPlugin
 		}
     	settings = new Settings(new File(DIR + CONFIG_FILE));
     	load();
-    	System.out.println("[AutoAnnouncer] Settings Loaded ("+strings.size()+" announces).");
     	if(permission)
     		enablePermissions();
     	else
     		System.out.println("[AutoAnnouncer] WARNING! No permission system enabled!");
-    	
+    	System.out.println("[AutoAnnouncer] Settings Loaded ("+strings.size()+" announces).");
     	isScheduling = scheduleOn(null);
     	System.out.println("[AutoAnnouncer] v"+pdfFile.getVersion()+" is enabled!" );
 		System.out.println("[AutoAnnouncer] Developed by: "+pdfFile.getAuthors());
@@ -73,23 +72,24 @@ public class AutoAnnouncer extends JavaPlugin
     		System.out.println("[AutoAnnouncer] Permissions system is enabled but could not be loaded!");
     }
     
-    private boolean permission(Player player, String line, Boolean op)
-    {
-    	    if(permissionsEnabled) {
-    	    	return Permissions.has(player, line);
-    	    } else {
-    	    	return op;
-    	    }
+    private boolean permission(Player player, String line, Boolean op){
+    	if(permissionsEnabled) {
+    		return Permissions.has(player, line);
+    	} else {
+    		return op;
+    	}
     }
     
     private void scheduleOff(boolean Disabling, Player player){
     	if(isScheduling){
     		getServer().getScheduler().cancelTask(taskId);
-    		System.out.println("[AutoAnnouncer] Scheduling finished.");
+    		if(player != null) player.sendMessage(ChatColor.DARK_GREEN+"Scheduling finished!");
+    		System.out.println("[AutoAnnouncer] Scheduling finished!");
 	    	isScheduling = false;
     	}else{
     		if(!Disabling)
-    			System.out.println("[AutoAnnouncer] No schedule running." );
+    			if(player != null) player.sendMessage(ChatColor.DARK_RED+"No schedule running!");
+    			System.out.println("[AutoAnnouncer] No schedule running!" );
     	}
     }
     
@@ -98,33 +98,70 @@ public class AutoAnnouncer extends JavaPlugin
 	    	if(strings.size() > 0){
 	    		taskId = getServer().getScheduler().scheduleAsyncRepeatingTask(this, new printAnnounce(), Interval * 1200, Interval * 1200);
 		    	if(taskId == -1){
+		    		if(player != null) player.sendMessage(ChatColor.DARK_RED+"Scheduling failed!");
 		    		System.out.println("[AutoAnnouncer] Scheduling failed!" );
 		    		return false;
 		    	}else{
 		    		counter = 0;
+		    		if(player != null) player.sendMessage(ChatColor.DARK_GREEN+"Scheduled every "+ Interval +" minutes!");
 		    		System.out.println("[AutoAnnouncer] Scheduled every "+ Interval +" minutes!" );
 		    		return true;
 		    	}
 	    	}else{
+	    		if(player != null) player.sendMessage(ChatColor.DARK_RED+"Scheduling failed! There are no announcements to do.");
 	    		System.out.println("[AutoAnnouncer] Scheduling failed! There are no announcements to do." );
 	    		return false;
 	    	}
     	}else{
+    		if(player != null) player.sendMessage(ChatColor.DARK_RED+"Scheduler already running.");
     		System.out.println("[AutoAnnouncer] Scheduler already running." );
     		return true;
     	}
     }
     
     private void scheduleRestart(Player player){
-    	
+    	if(isScheduling){
+    		scheduleOff(false, null);
+    		settings.load();
+    		load();
+    		player.sendMessage(ChatColor.DARK_GREEN+"Settings Loaded ("+strings.size()+" announces).");
+    		isScheduling = scheduleOn(player);
+    	}else{
+    		player.sendMessage(ChatColor.DARK_RED+"No schedule running!");
+    	}
     }
     
     private void setInterval(String[] args, Player player){
-    	
+    	if(args.length == 2) {
+    		try{
+				int interval = Integer.parseInt(args[1], 10);
+				settings.updateValue("Settings.Interval", interval);
+				player.sendMessage(ChatColor.DARK_GREEN+"Interval changed successfully to "+args[1]+" minutes.");
+				if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
+			}catch(NumberFormatException err){
+				player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer interval 5");
+			}
+    	}else{
+    		player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer interval 5");
+    	}
     }
     
     private void setRandom(String[] args, Player player){
-    	
+    	if(args.length == 2) {
+    		if(args[1].equals("on")){
+    			settings.updateValue("Settings.Random", true);
+    			player.sendMessage(ChatColor.DARK_GREEN+"Changed to random transition.");
+    			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
+    		}else if(args[1].equals("off")){
+    			settings.updateValue("Settings.Random", false);
+    			player.sendMessage(ChatColor.DARK_GREEN+"Changed to consecutive transition.");
+    			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
+    		}else{
+    			player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer random off");
+    		}
+    	}else{
+    		player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer random off");
+    	}
     }
     
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
@@ -164,10 +201,10 @@ public class AutoAnnouncer extends JavaPlugin
     
     public void auctionHelp(Player player) {
     	String or = ChatColor.WHITE + " | ";
-    	String auctionStatusColor = ChatColor.GREEN.toString();
-    	String helpMainColor = ChatColor.YELLOW.toString();
+    	String auctionStatusColor = ChatColor.DARK_GREEN.toString();
+    	String helpMainColor = ChatColor.GOLD.toString();
     	String helpCommandColor = ChatColor.AQUA.toString();
-    	String helpObligatoryColor = ChatColor.RED.toString();
+    	String helpObligatoryColor = ChatColor.DARK_RED.toString();
         player.sendMessage(helpMainColor + " -----[ " + auctionStatusColor + "Help for AutoAnnouncer" + helpMainColor + " ]----- ");
         player.sendMessage(helpCommandColor + "/announcer help" + or + helpCommandColor + "?" + helpMainColor + " - Show this message.");
         player.sendMessage(helpCommandColor + "/announcer on" + helpMainColor + " - Start AutoAnnouncer.");

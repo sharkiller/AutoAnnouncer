@@ -1,12 +1,13 @@
+# To support special characters save in UTF-8
 Settings:
-      # Scheduler Interval in minutes
-      Interval: 5
-      # true: random | false: consecutive
-      Random: false
-      # true: permissions security | false: only OP's
-      Permission: true
+    # Scheduler Interval in minutes
+    Interval: 5
+    # true: random | false: consecutive
+    Random: false
+    # true: permissions security | false: only OP's
+    Permission: true
 Announcer:
-      # Strings to announce
-      Strings:
-            - '&RED;Running CraftBukkit server with &GOLD;AutoAnnouncer.'
-            - '&GREEN;Development by Sharkiller!'
+    # Strings to announce
+    Strings:
+        - '&DARK_RED;Running CraftBukkit server with &GOLD;AutoAnnouncer.'
+        - '&DARK_GREEN;Development by Sharkiller!'

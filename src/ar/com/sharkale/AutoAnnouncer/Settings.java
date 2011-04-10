@@ -36,8 +36,8 @@ public class Settings
 		defaults.put("Settings.Random", false);
 		defaults.put("Settings.Permission", true);
 		List<String> AnnouncerStrings = new ArrayList<String>();
-		AnnouncerStrings.add("&RED;Running craftbukkit server with &GOLD;AutoAnnouncer.");
-		AnnouncerStrings.add("&GREEN;Development by Sharkiller!");
+		AnnouncerStrings.add("&DARK_RED;Running craftbukkit server with &GOLD;AutoAnnouncer.");
+		AnnouncerStrings.add("&DARK_GREEN;Development by Sharkiller!");
 		defaults.put("Announcer.Strings", AnnouncerStrings);
 	}
 
