@@ -184,7 +184,7 @@ public class AutoAnnouncer extends JavaPlugin
 	    					setInterval(args, player);
 	    				else if(args[0].equalsIgnoreCase("random") || args[0].equalsIgnoreCase("r"))
 	    					setRandom(args, player);
-	    				else if(args[0].equalsIgnoreCase("restart"))
+	    				else if(args[0].equalsIgnoreCase("restart") || args[0].equalsIgnoreCase("reload"))
 	    					scheduleRestart(player);
 	    				return true;
 	    			} catch(ArrayIndexOutOfBoundsException ex) {
@@ -248,7 +248,9 @@ public class AutoAnnouncer extends JavaPlugin
         public void run()
         {
         	String announce = "";
-        	if(isRandom){
+        	
+        	if(isRandom)
+        	{
 	            Random randomise = new Random();
 	            int selection = randomise.nextInt(strings.size());
 	            announce = strings.get(selection);
@@ -258,7 +260,9 @@ public class AutoAnnouncer extends JavaPlugin
         		if(counter >= strings.size())
         			counter = 0;
         	}
-            getServer().broadcastMessage(colorize(announce));
+        	
+        	for (String line : announce.split("&NEW_LINE;"))
+        		getServer().broadcastMessage(colorize(line));
         }
     }
 
