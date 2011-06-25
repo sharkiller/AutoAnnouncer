@@ -10,11 +10,10 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.ChatColor;
+import org.bukkit.util.config.Configuration;
 
 import com.nijiko.permissions.PermissionHandler;
 import com.nijikokun.bukkit.Permissions.Permissions;
-
-import ar.com.sharkale.AutoAnnouncer.Settings;
 
 public class AutoAnnouncer extends JavaPlugin
 {
@@ -22,10 +21,11 @@ public class AutoAnnouncer extends JavaPlugin
 	private static final String DIR = "plugins" + File.separator + "AutoAnnouncer" + File.separator;
 	private static final String CONFIG_FILE = "settings.yml";
 	
-	private static Settings settings;
-	private static int Interval = 5, taskId = -1, counter = 0;
-	private static boolean isScheduling = false, isRandom = true, permissionsEnabled = false, permission = true;
-	private static List<String> strings = new ArrayList<String>();
+	private static Configuration Settings;
+	private static String Tag;
+	private static int Interval, taskId = -1, counter = 0;
+	private static boolean isScheduling = false, isRandom, permissionsEnabled = false, permission, toGroups;
+	private static List<String> strings, Groups;
 	public static PermissionHandler Permissions;
 
     public void onEnable()
@@ -41,7 +41,7 @@ public class AutoAnnouncer extends JavaPlugin
 		}catch (Exception e){
 			System.out.println(e.getMessage());
 		}
-    	settings = new Settings(new File(DIR + CONFIG_FILE));
+		Settings = new Configuration(new File(DIR + CONFIG_FILE));
     	load();
     	if(permission)
     		enablePermissions();
@@ -122,7 +122,6 @@ public class AutoAnnouncer extends JavaPlugin
     private void scheduleRestart(Player player){
     	if(isScheduling){
     		scheduleOff(false, null);
-    		settings.load();
     		load();
     		player.sendMessage(ChatColor.DARK_GREEN+"Settings Loaded ("+strings.size()+" announces).");
     		isScheduling = scheduleOn(player);
@@ -135,7 +134,7 @@ public class AutoAnnouncer extends JavaPlugin
     	if(args.length == 2) {
     		try{
 				int interval = Integer.parseInt(args[1], 10);
-				settings.updateValue("Settings.Interval", interval);
+				Settings.setProperty("Settings.Interval", interval);
 				player.sendMessage(ChatColor.DARK_GREEN+"Interval changed successfully to "+args[1]+" minutes.");
 				if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
 			}catch(NumberFormatException err){
@@ -149,11 +148,11 @@ public class AutoAnnouncer extends JavaPlugin
     private void setRandom(String[] args, Player player){
     	if(args.length == 2) {
     		if(args[1].equals("on")){
-    			settings.updateValue("Settings.Random", true);
+    			Settings.setProperty("Settings.Random", true);
     			player.sendMessage(ChatColor.DARK_GREEN+"Changed to random transition.");
     			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
     		}else if(args[1].equals("off")){
-    			settings.updateValue("Settings.Random", false);
+    			Settings.setProperty("Settings.Random", false);
     			player.sendMessage(ChatColor.DARK_GREEN+"Changed to consecutive transition.");
     			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
     		}else{
@@ -216,10 +215,14 @@ public class AutoAnnouncer extends JavaPlugin
     
 	private void load()
 	{
-		Interval = settings.getInt("Settings.Interval");
-		isRandom = settings.getBool("Settings.Random");
-		permission = settings.getBool("Settings.Permission");
-		strings = settings.getStrList("Announcer.Strings");
+		Settings.load();
+		Interval = Settings.getInt("Settings.Interval", 5);
+		isRandom = Settings.getBoolean("Settings.Random", false);
+		permission = Settings.getBoolean("Settings.Permission", true);
+		strings = Settings.getStringList("Announcer.Strings", new ArrayList<String>());
+		Tag = colorize(Settings.getString("Announcer.Tag", "&GOLD;[AutoAnnouncer]"));
+		toGroups = Settings.getBoolean("Announcer.ToGroups", true);
+		Groups = Settings.getStringList("Announcer.Groups", new ArrayList<String>());
 	}
 	
 	private String colorize(String announce)
@@ -260,9 +263,23 @@ public class AutoAnnouncer extends JavaPlugin
         		if(counter >= strings.size())
         			counter = 0;
         	}
-        	
-        	for (String line : announce.split("&NEW_LINE;"))
-        		getServer().broadcastMessage(colorize(line));
+
+        	if(toGroups){
+        		Player[] players = getServer().getOnlinePlayers();
+       			for(Player p: players){
+       				for(String group: Groups){
+       					if(Permissions.inGroup(p.getWorld().getName(), p.getName(), group)){
+       						for (String line : announce.split("&NEW_LINE;"))
+       							p.sendMessage(Tag+" "+colorize(line));
+       						break;
+       					}
+        			}
+        		}
+        	}else{
+        		for (String line : announce.split("&NEW_LINE;"))
+        			getServer().broadcastMessage(Tag+" "+colorize(line));
+        	}
+
         }
     }
 

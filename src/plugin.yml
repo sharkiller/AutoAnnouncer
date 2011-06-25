@@ -1,6 +1,6 @@
 name: AutoAnnouncer
 main: ar.com.sharkale.AutoAnnouncer.AutoAnnouncer
-version: 1.2-05.01
+version: 1.3-06.25
 author: Sharkiller
 description: Global announcements every few minutes. 
 commands:
