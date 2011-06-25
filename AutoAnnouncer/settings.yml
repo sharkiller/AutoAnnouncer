@@ -17,7 +17,7 @@ Announcer:
     ToGroups: false
     # Groups to send announcement. Only if ToGroups is true.
     Groups:
-        - 'default'
+        - 'Default'
     # Strings to announce
     # If you have problems check your syntax here:
     # http://yaml-online-parser.appspot.com/
