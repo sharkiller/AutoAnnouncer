@@ -1,4 +1,8 @@
-# To support special characters save in UTF-8
+########################################
+# AutoAnnouncer Settings by Sharkiller #
+###############################################################
+# To support unicode characters save the file in UTF-8 format #
+###############################################################
 Settings:
     # Scheduler Interval in minutes
     Interval: 5
@@ -11,10 +15,12 @@ Settings:
 Announcer:
     # true: certain groups in permissions | false: to all
     ToGroups: false
-    # Groups to send announcement.
+    # Groups to send announcement. Only if ToGroups is true.
     Groups:
         - 'default'
     # Strings to announce
+    # If you have problems check your syntax here:
+    # http://yaml-online-parser.appspot.com/
     Strings:
-        - '&DARK_RED;Running CraftBukkit server with &GOLD;AutoAnnouncer.'
-        - '&DARK_GREEN;Development by Sharkiller!'
+        - "&DARK_RED;Running CraftBukkit server with &GOLD;AutoAnnouncer."
+        - "&DARK_GREEN;Development by Sharkiller!"
