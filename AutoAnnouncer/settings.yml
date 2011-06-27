@@ -10,9 +10,9 @@ Settings:
     Random: false
     # true: permissions security | false: only OP's
     Permission: true
+Announcer:
     # Tag for Announcement. May be empty: ''
     Tag: '&GOLD;[AutoAnnouncer]'
-Announcer:
     # true: certain groups in permissions | false: to all
     ToGroups: false
     # Groups to send announcement. Only if ToGroups is true.

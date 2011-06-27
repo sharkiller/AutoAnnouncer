@@ -21,7 +21,7 @@ public class AutoAnnouncer extends JavaPlugin
 	private static final String DIR = "plugins" + File.separator + "AutoAnnouncer" + File.separator;
 	private static final String CONFIG_FILE = "settings.yml";
 	
-	private static Configuration Settings;
+	private static Configuration Settings = new Configuration(new File(DIR + CONFIG_FILE));
 	private static String Tag;
 	private static int Interval, taskId = -1, counter = 0;
 	private static boolean isScheduling = false, isRandom, permissionsEnabled = false, permission, toGroups;
@@ -41,7 +41,6 @@ public class AutoAnnouncer extends JavaPlugin
 		}catch (Exception e){
 			System.out.println(e.getMessage());
 		}
-		Settings = new Configuration(new File(DIR + CONFIG_FILE));
     	load();
     	if(permission)
     		enablePermissions();
@@ -135,6 +134,7 @@ public class AutoAnnouncer extends JavaPlugin
     		try{
 				int interval = Integer.parseInt(args[1], 10);
 				Settings.setProperty("Settings.Interval", interval);
+				Settings.save();
 				player.sendMessage(ChatColor.DARK_GREEN+"Interval changed successfully to "+args[1]+" minutes.");
 				if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
 			}catch(NumberFormatException err){
@@ -149,10 +149,12 @@ public class AutoAnnouncer extends JavaPlugin
     	if(args.length == 2) {
     		if(args[1].equals("on")){
     			Settings.setProperty("Settings.Random", true);
+    			Settings.save();
     			player.sendMessage(ChatColor.DARK_GREEN+"Changed to random transition.");
     			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
     		}else if(args[1].equals("off")){
     			Settings.setProperty("Settings.Random", false);
+    			Settings.save();
     			player.sendMessage(ChatColor.DARK_GREEN+"Changed to consecutive transition.");
     			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
     		}else{
@@ -264,7 +266,7 @@ public class AutoAnnouncer extends JavaPlugin
         			counter = 0;
         	}
 
-        	if(toGroups){
+        	if(permission && toGroups){
         		Player[] players = getServer().getOnlinePlayers();
        			for(Player p: players){
        				for(String group: Groups){
