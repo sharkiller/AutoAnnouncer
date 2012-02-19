@@ -1,0 +1,27 @@
+########################################
+# AutoAnnouncer Settings by Sharkiller #
+###############################################################
+# To support unicode characters save the file in UTF-8 format #
+###############################################################
+
+# Scheduler Interval in minutes
+interval: 5
+# true: random | false: consecutive
+random: false
+# true: use old Permissions plugin | false: use SuperPerms
+use-old-permissions: true
+
+announcer:
+    # Tag for Announcement. May be empty: ''
+    tag: '&GOLD;[AutoAnnouncer]'
+    # true: certain groups in permissions | false: to all
+    send-to-specific-groups: false
+    # Groups to send announcement. Only if ToGroups is true.
+    groups-to-send-to:
+        - 'Default'
+    # Strings to announce
+    # If you have problems check your syntax here:
+    # http://yaml-online-parser.appspot.com/
+    announcements:
+        - "&DARK_RED;Running CraftBukkit server with &GOLD;AutoAnnouncer."
+        - "&DARK_GREEN;Development by Sharkiller!"
