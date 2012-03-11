@@ -5,15 +5,16 @@ import java.util.*;
 
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.ConsoleCommandSender;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginDescriptionFile;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.ChatColor;
-import org.bukkit.util.config.Configuration;
+//import org.bukkit.util.config.Configuration;
 
-import com.nijiko.permissions.PermissionHandler;
-import com.nijikokun.bukkit.Permissions.Permissions;
+import net.milkbowl.vault.permission.Permission;
 
 public class AutoAnnouncer extends JavaPlugin
 {
@@ -21,23 +22,25 @@ public class AutoAnnouncer extends JavaPlugin
 	private static final String DIR = "plugins" + File.separator + "AutoAnnouncer" + File.separator;
 	private static final String CONFIG_FILE = "settings.yml";
 	
-	private static Configuration Settings = new Configuration(new File(DIR + CONFIG_FILE));
+	private static YamlConfiguration Settings = YamlConfiguration.loadConfiguration(new File(DIR + CONFIG_FILE));
 	private static String Tag;
 	private static int Interval, taskId = -1, counter = 0;
-	private static boolean isScheduling = false, isRandom, permissionsEnabled = false, permission, toGroups;
+	private static boolean isScheduling = false, isRandom, permissionsEnabled = false, InSeconds = false, permission, toGroups;
 	private static List<String> strings, Groups;
-	public static PermissionHandler Permissions;
+	private static Permission Permissions = null;
 
-    public void onEnable()
-    {
+	@Override
+    public void onEnable() {
     	pdfFile = this.getDescription();
     	File fDir = new File(DIR);
 		if (!fDir.exists())
 			fDir.mkdir();
 		try{
-			File fAuths = new File(DIR + CONFIG_FILE);
-			if (!fAuths.exists())
-				fAuths.createNewFile();
+			File configFile = new File(DIR + CONFIG_FILE);
+			if (!configFile.exists()) {
+				configFile.getParentFile().mkdirs();
+	            copy(getResource(CONFIG_FILE), configFile);
+			}
 		}catch (Exception e){
 			System.out.println(e.getMessage());
 		}
@@ -52,23 +55,20 @@ public class AutoAnnouncer extends JavaPlugin
 		System.out.println("[AutoAnnouncer] Developed by: "+pdfFile.getAuthors());
 	}
 
-    public void onDisable()
-    {
+    @Override
+    public void onDisable(){
     	scheduleOff(true, null);
     	System.out.println("[AutoAnnouncer] v"+pdfFile.getVersion()+" is disabled!.");
     }
     
     private void enablePermissions() {
-    	Plugin p = getServer().getPluginManager().getPlugin("Permissions");
-    	if(p != null) {
-    		if(!p.isEnabled())
-    			getServer().getPluginManager().enablePlugin(p);
-    		Permissions = ((Permissions)p).getHandler();
-    		permissionsEnabled = true;
-    		
-    		System.out.println("[AutoAnnouncer] Permissions support enabled!");
-    	} else
-    		System.out.println("[AutoAnnouncer] Permissions system is enabled but could not be loaded!");
+    	RegisteredServiceProvider<Permission> permissionProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.permission.Permission.class);
+        if (permissionProvider != null) {
+            Permissions = permissionProvider.getProvider();
+            permissionsEnabled = true;
+            System.out.println("[milkAdmin] Permission support enabled!");
+        } else
+        	System.out.println("[milkAdmin] Permission system not found!");
     }
     
     private boolean permission(Player player, String line, Boolean op){
@@ -79,100 +79,98 @@ public class AutoAnnouncer extends JavaPlugin
     	}
     }
     
-    private void scheduleOff(boolean Disabling, Player player){
+    private void scheduleOff(boolean Disabling, CommandSender sender){
     	if(isScheduling){
     		getServer().getScheduler().cancelTask(taskId);
-    		if(player != null) player.sendMessage(ChatColor.DARK_GREEN+"Scheduling finished!");
+    		if(sender != null) sender.sendMessage(ChatColor.DARK_GREEN+"Scheduling finished!");
     		System.out.println("[AutoAnnouncer] Scheduling finished!");
 	    	isScheduling = false;
     	}else{
     		if(!Disabling)
-    			if(player != null) player.sendMessage(ChatColor.DARK_RED+"No schedule running!");
+    			if(sender != null) sender.sendMessage(ChatColor.DARK_RED+"No schedule running!");
     			System.out.println("[AutoAnnouncer] No schedule running!" );
     	}
     }
     
-    private boolean scheduleOn(Player player){
+    private boolean scheduleOn(CommandSender sender){
     	if(!isScheduling){
 	    	if(strings.size() > 0){
-	    		taskId = getServer().getScheduler().scheduleAsyncRepeatingTask(this, new printAnnounce(), Interval * 1200, Interval * 1200);
+	    		int TimeToTicks = InSeconds? 20:1200;
+	    		taskId = getServer().getScheduler().scheduleAsyncRepeatingTask(this, new printAnnounce(), Interval * TimeToTicks, Interval * TimeToTicks);
 		    	if(taskId == -1){
-		    		if(player != null) player.sendMessage(ChatColor.DARK_RED+"Scheduling failed!");
+		    		if(sender != null) sender.sendMessage(ChatColor.DARK_RED+"Scheduling failed!");
 		    		System.out.println("[AutoAnnouncer] Scheduling failed!" );
 		    		return false;
 		    	}else{
 		    		counter = 0;
-		    		if(player != null) player.sendMessage(ChatColor.DARK_GREEN+"Scheduled every "+ Interval +" minutes!");
-		    		System.out.println("[AutoAnnouncer] Scheduled every "+ Interval +" minutes!" );
+		    		if(sender != null) sender.sendMessage(ChatColor.DARK_GREEN+"Scheduled every "+ Interval + (InSeconds? " seconds!":" minutes!"));
+		    		System.out.println("[AutoAnnouncer] Scheduled every "+ Interval + (InSeconds? " seconds!":" minutes!"));
 		    		return true;
 		    	}
 	    	}else{
-	    		if(player != null) player.sendMessage(ChatColor.DARK_RED+"Scheduling failed! There are no announcements to do.");
+	    		if(sender != null) sender.sendMessage(ChatColor.DARK_RED+"Scheduling failed! There are no announcements to do.");
 	    		System.out.println("[AutoAnnouncer] Scheduling failed! There are no announcements to do." );
 	    		return false;
 	    	}
     	}else{
-    		if(player != null) player.sendMessage(ChatColor.DARK_RED+"Scheduler already running.");
+    		if(sender != null) sender.sendMessage(ChatColor.DARK_RED+"Scheduler already running.");
     		System.out.println("[AutoAnnouncer] Scheduler already running." );
     		return true;
     	}
     }
     
-    private void scheduleRestart(Player player){
+    private void scheduleRestart(CommandSender sender){
     	if(isScheduling){
     		scheduleOff(false, null);
     		load();
-    		player.sendMessage(ChatColor.DARK_GREEN+"Settings Loaded ("+strings.size()+" announces).");
-    		isScheduling = scheduleOn(player);
+    		sender.sendMessage(ChatColor.DARK_GREEN+"Settings Loaded ("+strings.size()+" announces).");
+    		isScheduling = scheduleOn(sender);
     	}else{
-    		player.sendMessage(ChatColor.DARK_RED+"No schedule running!");
+    		sender.sendMessage(ChatColor.DARK_RED+"No schedule running!");
     	}
     }
     
-    private void setInterval(String[] args, Player player){
+    private void setInterval(String[] args, CommandSender sender){
     	if(args.length == 2) {
     		try{
 				int interval = Integer.parseInt(args[1], 10);
-				Settings.setProperty("Settings.Interval", interval);
-				Settings.save();
-				player.sendMessage(ChatColor.DARK_GREEN+"Interval changed successfully to "+args[1]+" minutes.");
-				if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
+				Settings.set("Settings.Interval", interval);
+				saveSettings();
+				sender.sendMessage(ChatColor.DARK_GREEN+"Interval changed successfully to "+args[1]+ (InSeconds? " seconds.":" minutes."));
+				if(isScheduling) sender.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
 			}catch(NumberFormatException err){
-				player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer interval 5");
+				sender.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer interval 5");
 			}
     	}else{
-    		player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer interval 5");
+    		sender.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer interval 5");
     	}
     }
     
-    private void setRandom(String[] args, Player player){
+    private void setRandom(String[] args, CommandSender sender){
     	if(args.length == 2) {
     		if(args[1].equals("on")){
-    			Settings.setProperty("Settings.Random", true);
-    			Settings.save();
-    			player.sendMessage(ChatColor.DARK_GREEN+"Changed to random transition.");
-    			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
+    			Settings.set("Settings.Random", true);
+    			saveSettings();
+    			sender.sendMessage(ChatColor.DARK_GREEN+"Changed to random transition.");
+    			if(isScheduling) sender.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
     		}else if(args[1].equals("off")){
-    			Settings.setProperty("Settings.Random", false);
-    			Settings.save();
-    			player.sendMessage(ChatColor.DARK_GREEN+"Changed to consecutive transition.");
-    			if(isScheduling) player.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
+    			Settings.set("Settings.Random", false);
+    			saveSettings();
+    			sender.sendMessage(ChatColor.DARK_GREEN+"Changed to consecutive transition.");
+    			if(isScheduling) sender.sendMessage(ChatColor.GOLD+"Restart the schedule to apply changes.");
     		}else{
-    			player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer random off");
+    			sender.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer random off");
     		}
     	}else{
-    		player.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer random off");
+    		sender.sendMessage(ChatColor.DARK_RED+"Error! Usage: /announcer random off");
     	}
     }
     
-    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args)
-    {
+    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
     	String commandName = cmd.getName();
-    	if(sender instanceof Player)
-    	{
+    	if(sender instanceof Player) {
     		Player player = (Player)sender;
-    		if(commandName.equalsIgnoreCase("announcer"))
-    		{
+    		if(commandName.equalsIgnoreCase("announcer")) {
     			if(permission(player, "announcer.admin", player.isOp())) {
 	    			try {
 	    				if(args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))
@@ -196,39 +194,57 @@ public class AutoAnnouncer extends JavaPlugin
     				return true;
     	    	}
     		}
+    	}else if(sender instanceof ConsoleCommandSender){
+    		ConsoleCommandSender Console = (ConsoleCommandSender) sender;
+    		try {
+    			if(args[0].equalsIgnoreCase("help") || args[0].equalsIgnoreCase("?"))
+					auctionHelp(Console);
+				else if(args[0].equalsIgnoreCase("off"))
+					scheduleOff(false, Console);
+				else if(args[0].equalsIgnoreCase("on"))
+					isScheduling = scheduleOn(Console);
+				else if(args[0].equalsIgnoreCase("interval") || args[0].equalsIgnoreCase("i"))
+					setInterval(args, Console);
+				else if(args[0].equalsIgnoreCase("random") || args[0].equalsIgnoreCase("r"))
+					setRandom(args, Console);
+				else if(args[0].equalsIgnoreCase("restart") || args[0].equalsIgnoreCase("reload"))
+					scheduleRestart(Console);
+				return true;
+			} catch(ArrayIndexOutOfBoundsException ex) {
+				return false;
+			}
     	}
     	return false;
     }
     
-    public void auctionHelp(Player player) {
+    public void auctionHelp(CommandSender sender) {
     	String or = ChatColor.WHITE + " | ";
     	String auctionStatusColor = ChatColor.DARK_GREEN.toString();
     	String helpMainColor = ChatColor.GOLD.toString();
     	String helpCommandColor = ChatColor.AQUA.toString();
     	String helpObligatoryColor = ChatColor.DARK_RED.toString();
-        player.sendMessage(helpMainColor + " -----[ " + auctionStatusColor + "Help for AutoAnnouncer" + helpMainColor + " ]----- ");
-        player.sendMessage(helpCommandColor + "/announcer help" + or + helpCommandColor + "?" + helpMainColor + " - Show this message.");
-        player.sendMessage(helpCommandColor + "/announcer on" + helpMainColor + " - Start AutoAnnouncer.");
-        player.sendMessage(helpCommandColor + "/announcer off" + helpMainColor + " - Stop AutoAnnouncer.");
-        player.sendMessage(helpCommandColor + "/announcer restart" + helpMainColor + " - Restart AutoAnnouncer.");
-        player.sendMessage(helpCommandColor + "/announcer interval" + or + helpCommandColor + "i" + helpObligatoryColor + " <minutes>" + helpMainColor + " - Set the interval time.");
-        player.sendMessage(helpCommandColor + "/announcer random" + or + helpCommandColor + "r" + helpObligatoryColor + " <on|off>" + helpMainColor + " - Set random or consecutive.");
+    	sender.sendMessage(helpMainColor + " -----[ " + auctionStatusColor + "Help for AutoAnnouncer" + helpMainColor + " ]----- ");
+    	sender.sendMessage(helpCommandColor + "/announcer help" + or + helpCommandColor + "?" + helpMainColor + " - Show this message.");
+    	sender.sendMessage(helpCommandColor + "/announcer on" + helpMainColor + " - Start AutoAnnouncer.");
+    	sender.sendMessage(helpCommandColor + "/announcer off" + helpMainColor + " - Stop AutoAnnouncer.");
+    	sender.sendMessage(helpCommandColor + "/announcer restart" + helpMainColor + " - Restart AutoAnnouncer.");
+    	sender.sendMessage(helpCommandColor + "/announcer interval" + or + helpCommandColor + "i" + helpObligatoryColor + " <minutes|seconds>" + helpMainColor + " - Set the interval time.");
+    	sender.sendMessage(helpCommandColor + "/announcer random" + or + helpCommandColor + "r" + helpObligatoryColor + " <on|off>" + helpMainColor + " - Set random or consecutive.");
     }
     
-	private void load()
-	{
-		Settings.load();
+	private void load() {
+		Settings = YamlConfiguration.loadConfiguration(new File(DIR + CONFIG_FILE));
 		Interval = Settings.getInt("Settings.Interval", 5);
+		InSeconds = Settings.getBoolean("Settings.InSeconds", false);
 		isRandom = Settings.getBoolean("Settings.Random", false);
 		permission = Settings.getBoolean("Settings.Permission", true);
-		strings = Settings.getStringList("Announcer.Strings", new ArrayList<String>());
+		strings = Settings.getStringList("Announcer.Strings");
 		Tag = colorize(Settings.getString("Announcer.Tag", "&GOLD;[AutoAnnouncer]"));
 		toGroups = Settings.getBoolean("Announcer.ToGroups", true);
-		Groups = Settings.getStringList("Announcer.Groups", new ArrayList<String>());
+		Groups = Settings.getStringList("Announcer.Groups");
 	}
 	
-	private String colorize(String announce)
-	{
+	private String colorize(String announce) {
 		announce = announce.replaceAll("&AQUA;",		ChatColor.AQUA.toString());
 		announce = announce.replaceAll("&BLACK;",		ChatColor.BLACK.toString());
 		announce = announce.replaceAll("&BLUE;",		ChatColor.BLUE.toString());
@@ -245,17 +261,30 @@ public class AutoAnnouncer extends JavaPlugin
 		announce = announce.replaceAll("&RED;",			ChatColor.RED.toString());
 		announce = announce.replaceAll("&WHITE;",		ChatColor.WHITE.toString());
 		announce = announce.replaceAll("&YELLOW;",		ChatColor.YELLOW.toString());
+		announce = announce.replaceAll("&0",		ChatColor.BLACK.toString());
+		announce = announce.replaceAll("&1",		ChatColor.DARK_BLUE.toString());
+		announce = announce.replaceAll("&2",		ChatColor.DARK_GREEN.toString());
+		announce = announce.replaceAll("&3",		ChatColor.DARK_AQUA.toString());
+		announce = announce.replaceAll("&4",		ChatColor.DARK_RED.toString());
+		announce = announce.replaceAll("&5",		ChatColor.DARK_PURPLE.toString());
+		announce = announce.replaceAll("&6",		ChatColor.GOLD.toString());
+		announce = announce.replaceAll("&7",		ChatColor.GRAY.toString());
+		announce = announce.replaceAll("&8",		ChatColor.DARK_GRAY.toString());
+		announce = announce.replaceAll("&9",		ChatColor.BLUE.toString());
+		announce = announce.replaceAll("&a",		ChatColor.GREEN.toString());
+		announce = announce.replaceAll("&b",		ChatColor.AQUA.toString());
+		announce = announce.replaceAll("&c",		ChatColor.RED.toString());
+		announce = announce.replaceAll("&d",		ChatColor.LIGHT_PURPLE.toString());
+		announce = announce.replaceAll("&e",		ChatColor.YELLOW.toString());
+		announce = announce.replaceAll("&f",		ChatColor.WHITE.toString());
 		return announce;
 	}
 
-    class printAnnounce implements Runnable
-    {
-        public void run()
-        {
+    class printAnnounce implements Runnable {
+        public void run() {
         	String announce = "";
         	
-        	if(isRandom)
-        	{
+        	if(isRandom) {
 	            Random randomise = new Random();
 	            int selection = randomise.nextInt(strings.size());
 	            announce = strings.get(selection);
@@ -270,7 +299,7 @@ public class AutoAnnouncer extends JavaPlugin
         		Player[] players = getServer().getOnlinePlayers();
        			for(Player p: players){
        				for(String group: Groups){
-       					if(Permissions.inGroup(p.getWorld().getName(), p.getName(), group)){
+       					if(Permissions.playerInGroup(p, group)){
        						for (String line : announce.split("&NEW_LINE;"))
        							p.sendMessage(Tag+" "+colorize(line));
        						break;
@@ -284,20 +313,27 @@ public class AutoAnnouncer extends JavaPlugin
 
         }
     }
-
-    public boolean isDebugging(Player player)
-    {
-        if(debugees.containsKey(player))
-            return ((Boolean)debugees.get(player)).booleanValue();
-        else
-            return false;
+    
+    private void saveSettings(){
+    	try {
+			Settings.save(new File(DIR + CONFIG_FILE));
+		} catch (IOException e) {
+			
+		}
     }
-
-    public void setDebugging(Player player, boolean value)
-    {
-        debugees.put(player, Boolean.valueOf(value));
+    
+    private void copy(InputStream in, File file) {
+        try {
+            OutputStream out = new FileOutputStream(file);
+            byte[] buf = new byte[1024];
+            int len;
+            while((len=in.read(buf))>0){
+                out.write(buf,0,len);
+            }
+            out.close();
+            in.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-
-    private final HashMap<Object, Object> debugees = new HashMap<Object, Object>();
-
 }
