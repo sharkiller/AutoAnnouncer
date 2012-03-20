@@ -1,4 +1,4 @@
-package ar.com.sharkale.AutoAnnouncer;
+package com.sectorgamer.sharkiller.AutoAnnouncer;
 
 import java.io.*;
 import java.util.*;
