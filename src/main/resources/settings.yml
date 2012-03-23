@@ -14,7 +14,7 @@ Settings:
     Permission: true
 Announcer:
     # Tag for Announcement. May be empty: ''
-    Tag: '&GOLD;[AutoAnnouncer]'
+    Tag: '&GOLD;[Announcer]'
     # true: certain groups in permissions | false: to all
     ToGroups: false
     # Groups to send announcement. Only if ToGroups is true.
@@ -25,4 +25,4 @@ Announcer:
     # http://yaml-online-parser.appspot.com/
     Strings:
         - "&DARK_RED;Running CraftBukkit server with &GOLD;AutoAnnouncer."
-        - "&DARK_GREEN;Development by Sharkiller!"
+        - "&DARK_RED;&MAGIC;AAAAA&DARK_GREEN; Development by &BOLD;&UNDERLINE;&ITALIC;Sharkiller!&RESET; &DARK_RED;&MAGIC;AAAAA"

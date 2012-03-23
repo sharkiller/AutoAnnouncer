@@ -1,6 +1,6 @@
 name: AutoAnnouncer
-main: ar.com.sharkale.AutoAnnouncer.AutoAnnouncer
-version: 1.6-03.10
+main: com.sectorgamer.sharkiller.AutoAnnouncer.Announcer
+version: 1.7-03.23
 author: Sharkiller
 description: Global announcements every few minutes.
 softdepend: [Vault] 
