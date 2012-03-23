@@ -53,7 +53,7 @@ public class AnnouncerUtils {
 		announce = announce.replaceAll("&k",		ChatColor.MAGIC.toString());
 		announce = announce.replaceAll("&l",		ChatColor.BOLD.toString());
 		announce = announce.replaceAll("&m",		ChatColor.STRIKETHROUGH.toString());
-		announce = announce.replaceAll("&i",		ChatColor.UNDERLINE.toString());
+		announce = announce.replaceAll("&n",		ChatColor.UNDERLINE.toString());
 		announce = announce.replaceAll("&o",		ChatColor.ITALIC.toString());
 		announce = announce.replaceAll("&r",		ChatColor.RESET.toString());
 		return announce;
