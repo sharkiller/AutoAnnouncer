@@ -1,9 +1,9 @@
 name: AutoAnnouncer
 main: com.sectorgamer.sharkiller.AutoAnnouncer.Announcer
-version: 1.7-03.23
-author: Sharkiller
+version: 1.7-03.30
+authors: [Sharkiller, THExSYSTEM]
 description: Global announcements every few minutes.
-softdepend: [Vault] 
+softdepend: [Vault, Permissions, bPermissions, PermissionsEx]
 commands:
   announcer:
     description: Manage announcements
