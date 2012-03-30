@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import org.bukkit.ChatColor;
 
 public class AnnouncerUtils {
-	
 	public static String colorize(String announce) {
 		// Color Names
 		announce = announce.replaceAll("&AQUA;",		ChatColor.AQUA.toString());
@@ -58,20 +57,19 @@ public class AnnouncerUtils {
 		announce = announce.replaceAll("&r",		ChatColor.RESET.toString());
 		return announce;
 	}
-	
-	public static void copy(InputStream in, File file) {
-        try {
-            OutputStream out = new FileOutputStream(file);
-            byte[] buf = new byte[1024];
-            int len;
-            while((len=in.read(buf))>0){
-                out.write(buf,0,len);
-            }
-            out.close();
-            in.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
 
+	public static void copy(InputStream in, File file) {
+		try {
+			OutputStream out = new FileOutputStream(file);
+			byte[] buf = new byte[1024];
+			int len;
+			while ((len=in.read(buf)) > 0) {
+				out.write(buf,0,len);
+			}
+			out.close();
+			in.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }
